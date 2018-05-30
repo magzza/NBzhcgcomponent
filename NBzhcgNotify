@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NBzhcgNotify
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.2.1
 // @description  nbzhcg 案件提醒
 // @author       Qi
 // @match        http://10.19.179.6/eUrbanMIS/main.htm*
