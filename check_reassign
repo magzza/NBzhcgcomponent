@@ -1,0 +1,185 @@
+// ==UserScript==
+// @name         check_reassign
+// @namespace    http://tampermonkey.net/
+// @version      0.3.1
+// @description  v0.3 修正其他栏目也选中无法获取的bug v0.3.1 处理含“处置通”的部门名称
+// @author       Qi
+// @match        http://10.19.179.6/eUrbanMIS/main.htm*
+// @grant        GM_xmlhttpRequest
+// @require      https://cdn.bootcss.com/jquery/2.2.3/jquery.js
+// ==/UserScript==
+
+(function() {
+   // 'use strict';
+
+         $(document).unbind('click').click(function(){
+
+             $(".app-panal").each(function(){//通过each来遍历
+                   if($(this).css("display")=='block'){
+                       if($(".app-tabs-head .app-tabs-item-active-spe",this).text().indexOf("待办案件")>-1){
+                        if($(".r2.selected",this).text().length==12){
+                            console.log("待办选中的案子是："+$(".r2.selected",this).text());
+                            mytest($(".r2.selected",this).text());
+                        }else{
+                        console.log("未选中");
+                        }
+                    }
+              }
+             });
+           
+    });
+
+    function mytest(selectd_tasknum){
+       GM_xmlhttpRequest ({
+         method:   'GET',
+         dataType: "json",
+         url:      'http://10.19.179.6/eUrbanMIS/home/bizbase/tasklist/gethumantasklistdata?taskListID=2&currentPage=1&numPerPage=10&sortFieldID=-1&sortType=',
+         onload:   function (responseDetails) {
+                    // DO ALL RESPONSE PROCESSING HERE...
+                    var findFlag=false;
+                    var jsonstr = JSON.parse(responseDetails.responseText);
+                    var data = jsonstr.resultInfo.data.listDataSet.listData;
+                    console.log("通过AJAX获取的全部待办案件信息：");
+                    console.log(data);
+                    for(var i =0;i<data.length;i++){
+                        if(data[i].task_num==selectd_tasknum)
+                        {
+                           console.log("通过查找，确定TaskNum:"+data[i].task_num+"的recID: "+data[i].rec_id);
+                           console.log("当前recID内容：");
+                           console.log(data[i]);
+                           getInfoByrecID(data[i].rec_id);
+                           findFlag = true;
+                           break;
+                         }
+                    }
+
+                    if(!findFlag)
+                    {
+                       console.log("未找到案件，可能已被其他人处理.");
+                    }
+
+                }
+       });
+    }
+
+      function getInfoByrecID(recID){
+       GM_xmlhttpRequest ( {
+          method:   'GET',
+          dataType: "json",
+          url:     "http://10.19.179.6/eUrbanMIS/home/workflow/getrecprocessinfo?recID="+recID+"&processType=full&_=1525998693678",
+          onload:  function (responseDetails) {
+                    // DO ALL RESPONSE PROCESSING HERE...
+                    var hasAssignedDepartment=[];
+                    var jsonstr = JSON.parse(responseDetails.responseText);
+                    var data = jsonstr.resultInfo.data.processInfo;
+                    for(var i =0;i<data.length;i++){
+                           if(data[i].actDefName=="区派遣" && data[i].nextActDefName=="区直部门")
+                           {
+                               var qzbm =  data[i].nextRolePartName;
+                               qzbm =  qzbm.replace(/\d+/g,'');
+                               if(qzbm.indexOf("慈溪市")>-1){
+                                 qzbm =  qzbm.replace(/慈溪市/g,'');
+                               }else if(qzbm.indexOf("慈溪")>-1){
+                                 qzbm =  qzbm.replace(/慈溪/g,'');
+                               }
+                                  //2018-05-23 add
+                               if(qzbm.indexOf("处置通")>-1){
+                                 qzbm =  qzbm.replace(/处置通/g,'');
+                               }
+
+                               hasAssignedDepartment.push(qzbm);
+                               console.log("解析到区直部门: "+qzbm);
+                           }
+                    }
+
+                    if(hasAssignedDepartment.length>0){
+                        console.log("区直部门数组：");
+                        console.log(hasAssignedDepartment);
+                    }else{
+                        console.log("未派过区直部门");
+                    }
+
+                   //点击"批转"事件,循环等待页面加载完成.为了解决默认选择的是否为重复派单部门。
+                  $(".app-menu-botton-icon-0211").unbind('click').click(function(){
+                        console.log("批转事件");
+                        var times=20;//循环20次，20秒后无法获取也终止
+                        var myinter =  setInterval(function(){
+                        var dispText = $(".app-panal .app-panal-content-container .workflow-row .app-tabs-item-active-spe").text();
+                        console.log("不断循环，获取标题："+dispText);
+                        if(dispText.length>0)
+                        {
+                              clearInterval(myinter);
+                              if($(".app-panal .app-panal-content-container .workflow-row .app-tabs-item-active-spe").text().indexOf("区直部门")>-1){
+                                  var txx = $(":checked").next().text();
+
+                                  console.log("选择内容: "+txx);
+                                  for(var n=0;n<hasAssignedDepartment.length;n++)
+                                  {
+                                      console.log("查找选择的:"+txx+"是否为派过的区直部门：" + hasAssignedDepartment[n]);
+                                      if(txx.indexOf(hasAssignedDepartment[n]) > -1)
+                                      {
+                                          console.log("!!!!!!重复选择，已经派过该部门");
+                                          $(".workflow-submit-button").hide();
+                                          $(".cfpd").remove();
+                                          $(".workflow-row-buttons").append("<span class='cfpd' style='color:red'>！！！！请勿重复派单！！！！！</span>");
+                                          break;
+                                      }else{
+                                          console.log("未找到部门");
+                                          $(".workflow-submit-button").show();
+                                          $(".cfpd").remove();
+                                      }
+
+                                  }
+                              }
+                        }
+                        times = times - 1;
+                        if(!times)
+                        {
+                            console.log("时间到，跳出循环");
+                            clearInterval(myinter);
+                        }
+                      },1000);
+                  });
+
+                  //点击radio事件,点击后分析raido选中的部门为否为重复派单部门
+                  $(":radio").unbind('click').click(function(){
+                      if($(".app-panal .app-panal-content-container .workflow-row .app-tabs-item-active-spe").text().indexOf("区直部门")>-1)
+                      {
+                          var tx = $(":checked").next().text();
+
+                          console.log("选择内容: " + tx);
+                          for(var j=0;j<hasAssignedDepartment.length;j++)
+                          {
+                              console.log("查找选择的:"+tx+"是否为派过的区直部门：" + hasAssignedDepartment[j]);
+                              if(tx.indexOf(hasAssignedDepartment[j]) > -1)
+                              {
+                                  console.log("!!!!!!重复选择，已经派过该部门");
+                                  $(".workflow-submit-button").hide();
+                                  $(".cfpd").remove();
+                                  $(".workflow-row-buttons").append("<span class='cfpd' style='color:red'>！！！！请勿重复派单！！！！！</span>");
+                                  break;
+                                  //notifiy("提醒","该部门已派过单，请勿重复派单！","");
+                              }else{
+                                  console.log("未找到部门");
+                                  $(".workflow-submit-button").show();
+                                  $(".cfpd").remove();
+                              }
+                          }
+                      }
+               });
+            }
+       });
+    }
+
+    function notifiy(title, body, click_url){
+      var notificationDetails = {
+          text: body,
+          title: title,
+          timeout: 10000,
+          onclick: function() {
+              $(click_url).click();
+          }
+      };
+      GM_notification(notificationDetails);
+　　}
+})();
