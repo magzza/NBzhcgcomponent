@@ -1,0 +1,2 @@
+# NBzhcgcomponent
+ningbo zhcg component 
