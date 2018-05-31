@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         NBzhcgNotify
 // @namespace    http://tampermonkey.net/
-// @version      0.2.1
-// @description  nbzhcg 案件提醒
+// @version      0.2.2
+// @description  nbzhcg 案件提醒 v0.2.2修改日期+1
 // @author       Qi
 // @match        http://10.19.179.6/eUrbanMIS/main.htm*
 // @require      https://cdn.bootcss.com/jquery/2.2.3/jquery.js
@@ -46,9 +46,10 @@
     }
      function return22(str1,str2){
          var date = new Date();
+         date.setDate(date.getDate()+1)
          var year = date.getFullYear();
          var month = date.getMonth()+1;
-         var day = date.getDate()+1;
+         var day = date.getDate();
          var creatTime = year+'-'+month+'-'+day;
          var deadTime = year+'-'+month+'-'+day;
          var url = "http://10.68.128.8:5080/eUrbanMIS/home/stat/stat/antiquery?queryID=2&condparams=%7B%22queryConds%22%3A+%255B%257B%2522condId%2522%3A%25221%2522%2C%2522fieldName%2522%3A%2522create_time%2522%2C%2522compType%2522%3A%2522%25E5%25B0%258F%25E4%25BA%258E%2522%2C%2522dataTypeID%2522%3A%252211%2522%2C%2522values%2522%3A%255B%2522" + creatTime + "%252000%3A00%3A00%2522%255D%2C%2522condProperty%2522%3A%25220%2522%2C%2522condType%2522%3A%25220%2522%2C%2522outParams%2522%3A%2522%2522%257D%2C%257B%2522condId%2522%3A%25228%2522%2C%2522fieldName%2522%3A%2522district_name%2522%2C%2522compType%2522%3A%2522%25E7%25AD%2589%25E4%25BA%258E%2522%2C%2522dataTypeID%2522%3A%2522126%2522%2C%2522fieldTypeInfo%2522%3A%2522(district_id%2520in%2520(%257B1%257D)%2520or%2520street_id%2520in%2520(%257B2%257D)%2520or%2520community_id%2520in%2520(%257B3%257D))%2522%2C%2522values%2522%3A%255B%25221%3A14%2522%255D%2C%2522condProperty%2522%3A%25220%2522%2C%2522condType%2522%3A%25220%2522%2C%2522outParams%2522%3A%2522%2522%257D%2C%257B%2522condId%2522%3A%252214%2522%2C%2522fieldName%2522%3A%2522dispose_deadline%2522%2C%2522compType%2522%3A%2522%25E5%25B0%258F%25E4%25BA%258E%2522%2C%2522dataTypeID%2522%3A%252211%2522%2C%2522values%2522%3A%255B%2522"+ deadTime +"%252009%3A00%3A00%2522%255D%2C%2522condProperty%2522%3A%25220%2522%2C%2522condType%2522%3A%25220%2522%2C%2522outParams%2522%3A%2522%2522%257D%2C%257B%2522condId%2522%3A%252216%2522%2C%2522fieldName%2522%3A%2522cur_act_def_id%2522%2C%2522compType%2522%3A%2522%25E7%25AD%2589%25E4%25BA%258E%2522%2C%2522dataTypeID%2522%3A%2522126%2522%2C%2522fieldTypeInfo%2522%3A%2522(cur_act_def_id%2520in%2520(%257B0%257D))%2522%2C%2522values%2522%3A%255B%25220%3A307%2522%255D%2C%2522condProperty%2522%3A%25220%2522%2C%2522condType%2522%3A%25220%2522%2C%2522outParams%2522%3A%2522%2522%257D%255D%7D&antiParam=&hidenCondSql=&page=1&rows=500";
