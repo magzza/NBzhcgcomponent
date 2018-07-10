@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         check_reassign
 // @namespace    http://tampermonkey.net/
-// @version      0.3.1
-// @description  v0.3 修正其他栏目也选中无法获取的bug v0.3.1 处理含“处置通”的部门名称
+// @version      0.3.2
+// @description  v0.3 修正其他栏目也选中无法获取的bug v0.3.1 处理含“处置通”的部门名称 v0.3.2 去除一键派遣
 // @author       Qi
 // @match        http://10.19.179.6/eUrbanMIS/main.htm*
 // @grant        GM_xmlhttpRequest
@@ -19,6 +19,7 @@
                        if($(".app-tabs-head .app-tabs-item-active-spe",this).text().indexOf("待办案件")>-1){
                         if($(".r2.selected",this).text().length==12){
                             console.log("待办选中的案子是："+$(".r2.selected",this).text());
+                            $(".app-menu-botton-icon-0321").remove();
                             mytest($(".r2.selected",this).text());
                         }else{
                         console.log("未选中");
@@ -41,6 +42,7 @@
                     var data = jsonstr.resultInfo.data.listDataSet.listData;
                     console.log("通过AJAX获取的全部待办案件信息：");
                     console.log(data);
+                    $(".app-menu-botton-icon-0321").remove();
                     for(var i =0;i<data.length;i++){
                         if(data[i].task_num==selectd_tasknum)
                         {
