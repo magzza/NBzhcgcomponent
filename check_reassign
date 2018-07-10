@@ -27,7 +27,6 @@
                     }
               }
              });
-           
     });
 
     function mytest(selectd_tasknum){
